@@ -1,0 +1,218 @@
+#define _CRT_SECURE_NO_WARNINGS
+#include "stdio.h"
+#include "stdlib.h"
+#include "conio.h"
+
+#define ARGMODE 2
+#define BLOCKSIZE 4
+#define BLOCK 1
+#define BYTE 8
+#define KEY 3
+#define ONE 1
+#define PASS 0
+#define POWEROFTWO 32
+#define SHIFT 1
+#define SHIFTSIZE 4
+#define THREE 3
+#define TWOPOWER 4294967295
+#define VECTOR 2
+
+#define LEFT 0
+#define RIGHT 1
+
+unsigned int get_data(unsigned int, unsigned char*);
+unsigned char* get_string(unsigned int, unsigned char*);
+unsigned int fgamma(unsigned int, unsigned int);
+unsigned int left(unsigned int, int);
+unsigned int right(unsigned int, int);
+unsigned int key_pass(char*);
+
+int main(int argc, char* argv[])
+{
+	unsigned __int8 a[BLOCKSIZE];
+	unsigned int gamma, service[KEY], data = NULL, pass = NULL, max = TWOPOWER;
+	char yn, key[POWEROFTWO];
+	unsigned char c = NULL;
+
+	int i = NULL;
+	long long f_size;
+
+	FILE *f, *fp, *fk;
+	if ((f = fopen(argv[ONE], "rb")) == NULL)
+	{
+		printf("Error. Can not open file %s. Press any key to exit.", argv[ONE]);
+		_getch();
+		return NULL;
+	}
+	fseek(f, NULL, SEEK_END);
+	f_size = ftell(f);
+	if (f_size & THREE)
+			for (i; i < BLOCKSIZE - (f_size & THREE); i++);
+	f_size = f_size + i;
+	fseek(f, NULL, SEEK_SET);
+
+	if (argv[ARGMODE][NULL] == 'e')
+	{
+		printf("Please enter the password (MAX %d chars):\n", POWEROFTWO);
+		scanf("%s", key);
+		pass = key_pass(key);
+		service[PASS] = pass;
+
+		srand(service[PASS]);
+		gamma = rand()*rand();
+		
+
+		if((fk = fopen("key.txt", "wb")) == NULL)
+		{
+			printf("Error. Can not open key file. Press any key to exit.");
+			_getch();
+			return NULL;
+		}
+		service[VECTOR] = RIGHT;
+		service[SHIFT] = SHIFTSIZE;
+		fwrite(service, sizeof(unsigned int), KEY, fk);
+		fclose(fk);
+		if((fp = fopen("encrypted", "wb")) == NULL)
+		{
+			printf("Error. Can not open encrypted file. Press any key to exit.");
+			_getch();
+			return NULL;
+		}
+		
+		while (f_size > 0)
+		{
+			fread(&data, sizeof(unsigned int), BLOCK, f);
+			f_size= f_size - BLOCKSIZE;
+			if (f_size <= NULL)
+				data = (max >> (BYTE * i)) & data;
+
+			data = fgamma(data, gamma);
+			
+			if (service[VECTOR] == RIGHT)
+			data = right(data, SHIFTSIZE);
+			else data = left(data, SHIFTSIZE);
+			fwrite(&data, sizeof(unsigned int), BLOCK, fp);
+		}
+		fclose(f);
+		fclose(fp);
+		printf("Encryption complete. Press any key to exit.");
+		}
+
+	else if (argv[ARGMODE][NULL] == 'd')
+	{
+		
+		if((fk = fopen("key.txt", "rb")) == NULL)
+		{
+			printf("Error. Can not open key file. Press any key to exit.");
+			_getch();
+			return NULL;
+		}
+
+		fread(service, sizeof(unsigned int), KEY, fk);
+		fclose(fk);
+		while (service[PASS] != pass)
+		{
+			printf("Please enter the password (MAX %d chars):\n", POWEROFTWO);
+			scanf("%s", key);
+			pass = key_pass(key);
+
+			if (service[PASS] == pass)
+			{
+				srand(service[PASS]);
+				gamma = rand()*rand();
+
+				if((fp = fopen("decrypted", "wb")) == NULL)
+				{
+					printf("Can not open decrypted file. Press any key to exit.");
+					_getch();
+					return NULL;
+				}
+
+				while (f_size > NULL)
+				{
+					fread(&data, sizeof(unsigned int), BLOCK, f);
+					f_size = f_size - BLOCKSIZE;
+
+					if (service[VECTOR] == RIGHT)
+						data = left(data, SHIFTSIZE);
+					else data = right(data, SHIFTSIZE);
+					data = fgamma(data, gamma);
+					if (f_size <= NULL)
+					{
+						get_string(data, a);
+						for (; (a[BLOCKSIZE - ONE - i] != c) && (i < BLOCKSIZE); i++)
+							fwrite(&a[BLOCKSIZE - ONE - i], sizeof(unsigned __int8), ONE, fp);
+					}
+					else fwrite(&data, sizeof(unsigned int), BLOCK, fp);
+				}
+			}
+			else
+			{
+				printf("Invalid password. Do you wont to try again? (y/n)\n");
+				fflush(stdin);
+				scanf("%c", &yn);
+				if (yn == 'n')
+					return 0;
+			}
+		}
+		fclose(f);
+		fclose(fp);
+		printf("Decryption complete. Press any key to exit.");
+	
+	}
+	else printf("Error. Mod can't be determinated. Press any key to exit.");
+	_getch();
+
+	return NULL;
+}
+
+unsigned char* get_string(unsigned int data, unsigned char* string)
+{
+
+	for (int i = NULL; i < BLOCKSIZE; i++)
+	{
+		string[i] = data >> BYTE * THREE;
+		data = data << BYTE;
+	}
+	return string;
+}
+
+unsigned int get_data(unsigned int data, unsigned char* string)
+{
+
+		int i = NULL;
+		data = NULL;
+		for (i; i < THREE; i++)
+		{
+			data = data | string[i];
+			data = data << BYTE;
+		}
+		data = data | string[i];
+		return data;
+}
+
+unsigned int fgamma(unsigned int data, unsigned int gamma)
+{
+	data = data ^ gamma;
+	return data;
+}
+
+unsigned int right(unsigned int data, int s_size)
+{
+	data = ((data >> s_size) | (data << (POWEROFTWO - s_size)));
+	return data;
+}
+
+unsigned int left(unsigned int data, int s_size)
+{
+	data = ((data << s_size) | (data >> (POWEROFTWO - s_size)));
+	return data;
+}
+
+unsigned int key_pass(char* key)
+{
+	unsigned int int_key = NULL;
+	for (int i = NULL; i < POWEROFTWO ; i++)
+		int_key += key[i];
+	return int_key;
+}
