@@ -1,0 +1,59 @@
+#define _CRT_SECURE_NO_WARNINGS
+#include "stdio.h"
+#include "conio.h"
+#include "stdlib.h"
+
+
+int main()
+
+{
+	int changes = 0;
+	int n;
+	int n_sort;
+	int a_copy;
+	int *a;
+	char c;
+	printf("Chislo elementov massiva?\n");
+	scanf("%d", &n);
+	a = (int*)malloc(n*sizeof(int));
+	
+	fflush(stdin);
+	printf("Elementy cherez probel:\n");
+	for (int i = 0; i<n;)
+	{
+
+		scanf("%d", &a[i]);
+		i = i + 2;
+		if (scanf("%c", &c) && c == ' ')
+			i--;
+	}
+	n_sort = n-1;
+	while (n_sort)
+	{
+		for (int i = 0; i < n_sort; i++)
+		{
+			if (a[i] > a[i + 1])
+			{
+				a_copy = a[i];
+				a[i] = a[i + 1];
+				a[i + 1] = a_copy;
+				changes++;
+			}
+
+		}
+
+		n_sort--;
+		if (!changes)
+			n_sort = 0;
+	}
+
+	for (int i = 0; i<n; i++)
+	{
+		printf("%d ", a[i]);
+	}
+	
+
+	free(a);
+	_getch();
+	return 0;
+}
